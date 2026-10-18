@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>수업 3줄 메모</title>
+<meta name="theme-color" content="#f6f1e7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="3줄 메모">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&display=swap">
+<style>
+  :root {
+    --bg: #f6f1e7;
+    --card: #fffdf8;
+    --text: #2b2620;
+    --muted: #7a7064;
+    --line: #e4dccb;
+    --accent: #3a6b5a;
+    --accent-soft: #e3ece6;
+    --warm: #c96f2f;
+    --warm-soft: #f6e4d4;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(43, 38, 32, .06), 0 4px 14px rgba(43, 38, 32, .06);
+    --serif: "Noto Serif KR", "Nanum Myeongjo", "AppleMyungjo", "Batang", "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 var(--sans);
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 16px 80px; }
+  header { padding: 22px 0 6px; }
+  h1, h2, h3, .num { font-family: var(--serif); }
+  h1 { font-size: 1.5rem; margin: 0; letter-spacing: -.01em; }
+  h1 small { display: block; font: 400 .85rem/1.4 var(--sans); color: var(--muted); margin-top: 2px; }
+  h2 { font-size: 1.15rem; margin: 0 0 12px; }
+
+  nav.tabs {
+    position: sticky; top: 0; z-index: 5; background: var(--bg);
+    display: flex; gap: 4px; padding: 10px 0; overflow-x: auto; scrollbar-width: none;
+    border-bottom: 1px solid var(--line); margin-bottom: 16px;
+  }
+  nav.tabs::-webkit-scrollbar { display: none; }
+  nav.tabs button {
+    flex: 0 0 auto; border: 0; background: transparent; color: var(--muted);
+    font: 600 .92rem var(--sans); padding: 8px 12px; border-radius: 999px; cursor: pointer;
+  }
+  nav.tabs button[aria-selected="true"] { background: var(--accent); color: #fff; }
+  nav.tabs .badge {
+    display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 9px;
+    background: var(--warm); color: #fff; font-size: .72rem; line-height: 18px; text-align: center;
+  }
+
+  .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 14px; }
+  label.f { display: block; font-weight: 600; font-size: .9rem; margin: 12px 0 4px; }
+  label.f .hint { font-weight: 400; color: var(--muted); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .row > * { flex: 1 1 140px; min-width: 0; }
+  input[type="text"], input[type="date"], input[type="search"], select, textarea {
+    width: 100%; font: inherit; color: var(--text); background: #fff;
+    border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px;
+  }
+  textarea { min-height: 72px; resize: vertical; }
+  /* iOS Safari: 날짜 입력의 고유 최소 너비가 옆 칸을 침범하지 않게 */
+  input[type="date"] { -webkit-appearance: none; appearance: none; display: block; min-width: 0; max-width: 100%; min-height: 44px; }
+  input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+  select { min-height: 44px; }
+  input:focus, select:focus, textarea:focus, button:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent);
+  }
+  .btn {
+    border: 1px solid var(--line); background: #fff; color: var(--text); font: 600 .9rem var(--sans);
+    padding: 9px 14px; border-radius: 10px; cursor: pointer;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.warn { color: var(--warm); border-color: var(--warm-soft); }
+  .btn.small { padding: 5px 10px; font-size: .82rem; }
+  .actions { display: flex; gap: 8px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+  .actions .kbd { color: var(--muted); font-size: .82rem; margin-left: auto; }
+  .edit-banner { background: var(--warm-soft); color: #7a3f12; border-radius: 10px; padding: 8px 12px; font-size: .9rem; margin-bottom: 4px; }
+
+  .memo-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .memo-date { font-family: var(--serif); font-weight: 700; }
+  .chip { display: inline-block; font-size: .78rem; padding: 2px 9px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .chip.example { background: var(--warm-soft); color: var(--warm); }
+  .line { display: grid; grid-template-columns: 4.6em 1fr; gap: 6px; padding: 4px 0; font-size: .94rem; }
+  .line + .line { border-top: 1px dashed var(--line); }
+  .line .lab { color: var(--muted); font-size: .82rem; padding-top: 2px; }
+  .line .txt { white-space: pre-wrap; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .line .txt.empty { color: var(--muted); font-style: italic; }
+  .done-tag { font-size: .75rem; margin-left: 6px; color: var(--accent); font-weight: 700; }
+  .memo-foot { display: flex; justify-content: flex-end; gap: 6px; margin-top: 10px; }
+
+  .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .filters input { grid-column: 1 / -1; }
+  .count { color: var(--muted); font-size: .85rem; margin: -4px 0 10px; }
+  .empty-state { text-align: center; color: var(--muted); padding: 18px 8px 6px; }
+  .empty-state h3 { color: var(--text); margin: 0 0 6px; font-size: 1.05rem; }
+
+  .banner { background: var(--warm-soft); border-left: 4px solid var(--warm); color: #6b3510; padding: 10px 14px; border-radius: 10px; margin-bottom: 14px; font-size: .92rem; }
+  ul.check { list-style: none; margin: 0; padding: 0; }
+  ul.check li { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; }
+  ul.check li + li { border-top: 1px dashed var(--line); }
+  ul.check input[type="checkbox"] { width: 20px; height: 20px; margin-top: 3px; accent-color: var(--accent); flex: none; }
+  ul.check .t { white-space: pre-wrap; word-break: break-word; }
+  ul.check .m { color: var(--muted); font-size: .8rem; }
+  ul.check.done .t { text-decoration: line-through; color: var(--muted); }
+  details summary { cursor: pointer; font-weight: 600; color: var(--muted); }
+
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat .num { font-size: 2rem; font-weight: 700; color: var(--accent); line-height: 1.2; }
+  .stat .lab { color: var(--muted); font-size: .85rem; }
+  .stat .sub { font-size: .82rem; color: var(--muted); }
+  ol.kw { margin: 0; padding: 0; list-style: none; }
+  ol.kw li { display: grid; grid-template-columns: 1.6em 6em 1fr 2.4em; align-items: center; gap: 8px; padding: 5px 0; }
+  ol.kw .rank { font-family: var(--serif); color: var(--warm); font-weight: 700; }
+  ol.kw .word { word-break: break-all; font-weight: 600; }
+  ol.kw .bar { height: 8px; background: var(--accent-soft); border-radius: 4px; overflow: hidden; }
+  ol.kw .bar span { display: block; height: 100%; background: var(--accent); }
+  ol.kw .c { text-align: right; font-family: var(--serif); color: var(--muted); }
+
+  ul.presets { list-style: none; padding: 0; margin: 0 0 10px; }
+  ul.presets li { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; }
+  ul.presets li + li { border-top: 1px dashed var(--line); }
+  .muted { color: var(--muted); font-size: .88rem; }
+
+  #toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0;
+    background: var(--text); color: #fff; padding: 10px 18px; border-radius: 999px; font-size: .92rem;
+    transition: opacity .2s, transform .2s; pointer-events: none; z-index: 20; max-width: calc(100% - 32px);
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  dialog { border: 0; border-radius: var(--radius); padding: 20px; max-width: min(360px, calc(100% - 32px)); box-shadow: 0 10px 40px rgba(0,0,0,.2); color: var(--text); background: var(--card); }
+  dialog::backdrop { background: rgba(43, 38, 32, .35); }
+  dialog p { margin: 0 0 16px; }
+  dialog .actions { justify-content: flex-end; margin: 0; }
+  [hidden] { display: none !important; }
+  @media (min-width: 560px) {
+    .filters { grid-template-columns: 1fr 1fr 2fr; }
+    .filters input { grid-column: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>수업 3줄 메모<small>관찰 · 해석 · 다음 행동 — 수업 끝나고 30초</small></h1>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="write" aria-selected="true">메모</button>
+    <button role="tab" data-tab="list" aria-selected="false">목록</button>
+    <button role="tab" data-tab="todo" aria-selected="false">다음 행동<span class="badge" id="todoBadge" hidden></span></button>
+    <button role="tab" data-tab="retro" aria-selected="false">주간 회고</button>
+    <button role="tab" data-tab="settings" aria-selected="false">설정</button>
+  </nav>
+
+  <!-- 1. 입력 -->
+  <section id="tab-write">
+    <form class="card" id="memoForm" autocomplete="off">
+      <div class="edit-banner" id="editBanner" hidden>메모를 수정하는 중입니다.</div>
+      <div class="row">
+        <div>
+          <label class="f" for="fDate">날짜</label>
+          <input type="date" id="fDate" required>
+        </div>
+        <div>
+          <label class="f" for="fClass">수업</label>
+          <select id="fClass"></select>
+        </div>
+      </div>
+      <label class="f" for="fObserve">① 관찰 <span class="hint">수업에서 본 사실</span></label>
+      <textarea id="fObserve" placeholder="예) 분수 나눗셈 문제에서 절반 이상이 역수를 곱하지 않고 그대로 나눴다."></textarea>
+      <label class="f" for="fInterpret">② 해석 <span class="hint">왜 그랬을까</span></label>
+      <textarea id="fInterpret" placeholder="예) '나누기 = 역수 곱하기'의 이유를 설명 없이 공식으로만 외운 것 같다."></textarea>
+      <label class="f" for="fAction">③ 다음 행동 <span class="hint">다음 수업에 할 것</span></label>
+      <textarea id="fAction" placeholder="예) 다음 시간 도입 5분에 그림으로 역수의 의미를 다시 보여주기."></textarea>
+      <div class="actions">
+        <button type="submit" class="btn primary" id="saveBtn">저장</button>
+        <button type="button" class="btn" id="cancelEditBtn" hidden>수정 취소</button>
+        <span class="kbd" id="kbdHint"></span>
+      </div>
+    </form>
+  </section>
+
+  <!-- 2. 목록 -->
+  <section id="tab-list" hidden>
+    <div class="filters">
+      <select id="filterClass" aria-label="수업 필터"></select>
+      <select id="filterPeriod" aria-label="기간 필터">
+        <option value="all">전체 기간</option>
+        <option value="week">이번 주</option>
+        <option value="month">이번 달</option>
+      </select>
+      <input type="search" id="filterQuery" placeholder="키워드 검색 (관찰·해석·다음 행동)" aria-label="키워드 검색">
+    </div>
+    <p class="count" id="listCount"></p>
+    <div id="memoList"></div>
+  </section>
+
+  <!-- 3. 다음 행동 -->
+  <section id="tab-todo" hidden>
+    <div class="banner" id="todoBanner" hidden></div>
+    <div class="card">
+      <h2>해야 할 다음 행동</h2>
+      <ul class="check" id="todoList"></ul>
+      <p class="muted" id="todoEmpty" hidden>미완료 다음 행동이 없어요. 👍</p>
+    </div>
+    <div class="card">
+      <details id="doneDetails">
+        <summary id="doneSummary">완료한 항목</summary>
+        <ul class="check done" id="doneList"></ul>
+      </details>
+    </div>
+  </section>
+
+  <!-- 4. 주간 회고 -->
+  <section id="tab-retro" hidden>
+    <div class="stats">
+      <div class="card stat">
+        <div class="lab">이번 주 메모</div>
+        <div class="num" id="statWeekCount">0</div>
+        <div class="sub" id="statWeekRange"></div>
+      </div>
+      <div class="card stat">
+        <div class="lab">이번 주 다음 행동 완료율</div>
+        <div class="num" id="statRate">–</div>
+        <div class="sub" id="statRateSub"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>최근 30일 자주 나온 키워드</h2>
+      <p class="muted" style="margin-top:-6px">관찰·해석 텍스트 기준, 2글자 이상 단어</p>
+      <ol class="kw" id="kwList"></ol>
+      <p class="muted" id="kwEmpty" hidden>최근 30일 메모가 아직 없어요.</p>
+    </div>
+  </section>
+
+  <!-- 5. 설정 / 데이터 -->
+  <section id="tab-settings" hidden>
+    <div class="card">
+      <h2>수업 목록</h2>
+      <ul class="presets" id="presetList"></ul>
+      <p class="muted" id="presetEmpty" hidden>아직 수업이 없어요. 아래에서 추가하세요.</p>
+      <form class="row" id="presetForm" autocomplete="off">
+        <input type="text" id="presetInput" maxlength="40" placeholder="예) 2학년 5반 수학" aria-label="새 수업 이름">
+        <button type="submit" class="btn primary" style="flex:0 0 auto">추가</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>백업 (JSON)</h2>
+      <p class="muted">가져오기는 기존 메모와 합칩니다. 같은 id의 메모는 기존 것을 유지해요.</p>
+      <div class="actions">
+        <button type="button" class="btn" id="exportJsonBtn">JSON 내보내기</button>
+        <button type="button" class="btn" id="importJsonBtn">JSON 가져오기</button>
+        <input type="file" id="importFile" accept=".json,application/json" hidden>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Markdown 내보내기</h2>
+      <div class="row">
+        <select id="mdPeriod" aria-label="내보낼 기간">
+          <option value="week">이번 주</option>
+          <option value="month">이번 달</option>
+          <option value="all">전체</option>
+        </select>
+        <button type="button" class="btn primary" id="exportMdBtn" style="flex:0 0 auto">.md 다운로드</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<dialog id="confirmDlg">
+  <p id="confirmMsg"></p>
+  <div class="actions">
+    <button type="button" class="btn" id="confirmNo">취소</button>
+    <button type="button" class="btn primary" id="confirmYes">확인</button>
+  </div>
+</dialog>
+
+<script>
+(() => {
+  'use strict';
+
+  // ---------- 저장소 ----------
+  const MEMO_KEY = 'lesson-memo-v1';
+  const CLASS_KEY = 'lesson-memo-v1-classes'; // { classes: [...] }
+
+  const $ = (id) => document.getElementById(id);
+  const pad = (n) => String(n).padStart(2, '0');
+  const fmtDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const todayStr = () => fmtDate(new Date());
+  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+  function newId() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  }
+
+  function readJSON(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) { return fallback; }
+  }
+
+  function normalizeMemo(m) {
+    if (!m || typeof m !== 'object') return null;
+    const s = (v) => (v == null ? '' : String(v));
+    const createdAt = s(m.createdAt);
+    return {
+      id: s(m.id) || newId(),
+      date: DATE_RE.test(s(m.date)) ? s(m.date) : todayStr(),
+      class: s(m.class).trim(),
+      observe: s(m.observe),
+      interpret: s(m.interpret),
+      action: s(m.action),
+      actionDone: m.actionDone === true,
+      createdAt: isNaN(Date.parse(createdAt)) ? new Date().toISOString() : createdAt,
+    };
+  }
+
+  function normalizeClasses(list) {
+    if (!Array.isArray(list)) return [];
+    const out = [];
+    for (const c of list) {
+      const v = String(c == null ? '' : c).trim().slice(0, 40);
+      if (v && !out.includes(v)) out.push(v);
+    }
+    return out;
+  }
+
+  const storedMemos = readJSON(MEMO_KEY, []);
+  let memos = (Array.isArray(storedMemos) ? storedMemos : []).map(normalizeMemo).filter(Boolean);
+  let classes = normalizeClasses((readJSON(CLASS_KEY, { classes: [] }) || {}).classes);
+
+  function persist() {
+    try {
+      localStorage.setItem(MEMO_KEY, JSON.stringify(memos));
+      localStorage.setItem(CLASS_KEY, JSON.stringify({ classes }));
+      return true;
+    } catch (e) {
+      toast('저장 실패: 브라우저 저장소를 사용할 수 없어요');
+      return false;
+    }
+  }
+
+  // ---------- 날짜 범위 ----------
+  function weekRange() {
+    const d = new Date();
+    const offset = (d.getDay() + 6) % 7; // 월요일 시작
+    const start = new Date(d.getFullYear(), d.getMonth(), d.getDate() - offset);
+    const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
+    return [fmtDate(start), fmtDate(end)];
+  }
+  function inPeriod(date, period) {
+    if (period === 'week') { const [s, e] = weekRange(); return date >= s && date <= e; }
+    if (period === 'month') return date.slice(0, 7) === todayStr().slice(0, 7);
+    return true;
+  }
+  const PERIOD_LABEL = { week: '이번 주', month: '이번 달', all: '전체' };
+
+  const byLatest = (a, b) => (b.date.localeCompare(a.date)) || (b.createdAt.localeCompare(a.createdAt));
+
+  // ---------- DOM 헬퍼 (사용자 입력은 textContent로만) ----------
+  function el(tag, props, children) {
+    const node = document.createElement(tag);
+    if (props) {
+      for (const [k, v] of Object.entries(props)) {
+        if (k === 'text') node.textContent = v;
+        else if (k === 'class') node.className = v;
+        else if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
+        else if (v === true) node.setAttribute(k, '');
+        else if (v !== false && v != null) node.setAttribute(k, v);
+      }
+    }
+    (children || []).forEach((c) => c && node.append(c));
+    return node;
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  // 확인 다이얼로그 → Promise<boolean>
+  const dlg = $('confirmDlg');
+  let dlgResolve = null;
+  function confirmDialog(msg, yesLabel) {
+    if (typeof dlg.showModal !== 'function') return Promise.resolve(window.confirm(msg));
+    closeDialog(false);
+    $('confirmMsg').textContent = msg;
+    $('confirmYes').textContent = yesLabel || '확인';
+    dlg.showModal();
+    $('confirmYes').focus();
+    return new Promise((res) => { dlgResolve = res; });
+  }
+  function closeDialog(val) {
+    if (dlg.open) dlg.close();
+    if (dlgResolve) { const r = dlgResolve; dlgResolve = null; r(val); }
+  }
+  $('confirmYes').addEventListener('click', () => closeDialog(true));
+  $('confirmNo').addEventListener('click', () => closeDialog(false));
+  dlg.addEventListener('cancel', (e) => { e.preventDefault(); closeDialog(false); });
+
+  // ---------- 탭 ----------
+  let currentTab = 'write';
+  const tabButtons = document.querySelectorAll('nav.tabs button');
+  function showTab(name) {
+    currentTab = name;
+    tabButtons.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+    document.querySelectorAll('section[id^="tab-"]').forEach((s) => { s.hidden = s.id !== 'tab-' + name; });
+    renderAll();
+    if (name === 'write') $('fObserve').focus({ preventScroll: true });
+  }
+  tabButtons.forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+  // ---------- 1. 입력 ----------
+  const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+  $('kbdHint').textContent = (isMac ? '⌘' : 'Ctrl') + ' + Enter로 저장';
+  let editingId = null;
+
+  function fillClassSelect(select, selected, extra) {
+    select.replaceChildren();
+    select.append(el('option', { value: '', text: classes.length ? '(수업 미지정)' : '(설정에서 수업을 추가하세요)' }));
+    const opts = classes.slice();
+    if (extra && !opts.includes(extra)) opts.push(extra);
+    opts.forEach((c) => select.append(el('option', { value: c, text: c })));
+    select.value = selected && opts.includes(selected) ? selected : '';
+  }
+
+  function resetForm() {
+    editingId = null;
+    $('fDate').value = todayStr();
+    $('fObserve').value = $('fInterpret').value = $('fAction').value = '';
+    $('editBanner').hidden = true;
+    $('cancelEditBtn').hidden = true;
+    $('saveBtn').textContent = '저장';
+  }
+
+  let lastClass = '';
+  async function submitMemo() {
+    if (dlg.open) return;
+    const date = $('fDate').value;
+    const observe = $('fObserve').value.trim();
+    const interpret = $('fInterpret').value.trim();
+    const action = $('fAction').value.trim();
+    const cls = $('fClass').value;
+    if (!DATE_RE.test(date)) { toast('날짜를 확인해 주세요'); $('fDate').focus(); return; }
+    if (!observe && !interpret && !action) { toast('내용을 한 줄 이상 적어 주세요'); $('fObserve').focus(); return; }
+    if (!action) {
+      const ok = await confirmDialog('다음 행동 없이 저장할까요?', '저장');
+      if (!ok) { $('fAction').focus(); return; }
+    }
+    if (editingId) {
+      const m = memos.find((x) => x.id === editingId);
+      if (m) {
+        if (m.action !== action) m.actionDone = false;
+        Object.assign(m, { date, class: cls, observe, interpret, action });
+      }
+    } else {
+      memos.push({ id: newId(), date, class: cls, observe, interpret, action, actionDone: false, createdAt: new Date().toISOString() });
+    }
+    if (!persist()) return;
+    const wasEditing = !!editingId;
+    lastClass = cls;
+    resetForm();
+    fillClassSelect($('fClass'), lastClass);
+    toast(wasEditing ? '수정됨' : '저장됨');
+    if (wasEditing) showTab('list'); else { renderBadge(); $('fObserve').focus(); }
+  }
+
+  $('memoForm').addEventListener('submit', (e) => { e.preventDefault(); submitMemo(); });
+  $('cancelEditBtn').addEventListener('click', () => { resetForm(); fillClassSelect($('fClass'), lastClass); showTab('list'); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && currentTab === 'write' && !dlg.open) {
+      e.preventDefault();
+      submitMemo();
+    }
+  });
+
+  function startEdit(id) {
+    const m = memos.find((x) => x.id === id);
+    if (!m) return;
+    showTab('write');
+    editingId = id;
+    $('fDate').value = m.date;
+    fillClassSelect($('fClass'), m.class, m.class);
+    $('fObserve').value = m.observe;
+    $('fInterpret').value = m.interpret;
+    $('fAction').value = m.action;
+    $('editBanner').hidden = false;
+    $('cancelEditBtn').hidden = false;
+    $('saveBtn').textContent = '수정 저장';
+    window.scrollTo({ top: 0 });
+  }
+
+  async function deleteMemo(id) {
+    const ok = await confirmDialog('이 메모를 삭제할까요? 되돌릴 수 없어요.', '삭제');
+    if (!ok) return;
+    memos = memos.filter((m) => m.id !== id);
+    if (editingId === id) resetForm();
+    persist();
+    renderAll();
+    toast('삭제됨');
+  }
+
+  // ---------- 2. 목록 ----------
+  function memoCard(m, opts) {
+    const example = opts && opts.example;
+    const line = (label, text, extra) => el('div', { class: 'line' }, [
+      el('div', { class: 'lab', text: label }),
+      el('div', { class: 'txt' + (text ? '' : ' empty'), text: text || '(비어 있음)' }, [extra]),
+    ]);
+    const doneTag = m.action ? el('span', { class: 'done-tag', text: m.actionDone ? '✓ 완료' : '' }) : null;
+    return el('article', { class: 'card memo' }, [
+      el('div', { class: 'memo-head' }, [
+        el('span', { class: 'memo-date', text: m.date }),
+        el('span', { class: 'chip', text: m.class || '수업 미지정' }),
+        example ? el('span', { class: 'chip example', text: '예시' }) : null,
+      ]),
+      line('① 관찰', m.observe),
+      line('② 해석', m.interpret),
+      line('③ 다음', m.action, doneTag),
+      example ? null : el('div', { class: 'memo-foot' }, [
+        el('button', { type: 'button', class: 'btn small', text: '수정', onclick: () => startEdit(m.id) }),
+        el('button', { type: 'button', class: 'btn small warn', text: '삭제', onclick: () => deleteMemo(m.id) }),
+      ]),
+    ]);
+  }
+
+  const EXAMPLE_MEMO = {
+    date: todayStr(), class: '2학년 5반 수학',
+    observe: '모둠 활동에서 두 모둠이 10분 넘게 첫 문제에서 멈춰 있었다.',
+    interpret: '문제 조건이 길어서 무엇을 구하는지 정리하지 못한 것 같다.',
+    action: '다음 시간엔 문제를 읽고 "구하는 것"에 밑줄 긋는 1분을 먼저 준다.',
+    actionDone: false,
+  };
+
+  function renderList() {
+    const fc = $('filterClass');
+    const prev = fc.value;
+    const allClasses = normalizeClasses(classes.concat(memos.map((m) => m.class)));
+    fc.replaceChildren(el('option', { value: '__all', text: '모든 수업' }));
+    allClasses.forEach((c) => fc.append(el('option', { value: c, text: c })));
+    if (memos.some((m) => !m.class)) fc.append(el('option', { value: '__none', text: '수업 미지정' }));
+    fc.value = [...fc.options].some((o) => o.value === prev) ? prev : '__all';
+
+    const box = $('memoList');
+    box.replaceChildren();
+    if (!memos.length) {
+      $('listCount').textContent = '';
+      box.append(
+        el('div', { class: 'empty-state' }, [
+          el('h3', { text: '아직 메모가 없어요' }),
+          el('p', { text: '수업이 끝나면 30초만 쓰세요. 본 것(관찰), 이유 추측(해석), 다음에 할 것(다음 행동) 세 줄이면 충분해요. 아래는 예시입니다.' }),
+        ]),
+        memoCard(EXAMPLE_MEMO, { example: true }),
+        el('div', { class: 'actions', style: 'justify-content:center' }, [
+          el('button', { type: 'button', class: 'btn primary', text: '첫 메모 쓰기', onclick: () => showTab('write') }),
+        ]),
+      );
+      return;
+    }
+    const cls = fc.value;
+    const period = $('filterPeriod').value;
+    const q = $('filterQuery').value.trim().toLowerCase();
+    const list = memos.filter((m) =>
+      (cls === '__all' || (cls === '__none' ? !m.class : m.class === cls)) &&
+      inPeriod(m.date, period) &&
+      (!q || (m.observe + '\n' + m.interpret + '\n' + m.action).toLowerCase().includes(q))
+    ).sort(byLatest);
+    $('listCount').textContent = `${list.length}개 / 전체 ${memos.length}개`;
+    if (!list.length) {
+      box.append(el('p', { class: 'empty-state', text: '조건에 맞는 메모가 없어요.' }));
+      return;
+    }
+    list.forEach((m) => box.append(memoCard(m)));
+  }
+  ['filterClass', 'filterPeriod'].forEach((id) => $(id).addEventListener('change', renderList));
+  $('filterQuery').addEventListener('input', renderList);
+
+  // ---------- 3. 다음 행동 ----------
+  const pendingActions = () => memos.filter((m) => m.action.trim() && !m.actionDone);
+
+  function setDone(id, done) {
+    const m = memos.find((x) => x.id === id);
+    if (!m) return;
+    m.actionDone = done;
+    persist();
+    renderAll();
+    toast(done ? '완료 처리했어요' : '미완료로 되돌렸어요');
+  }
+
+  function checkItem(m, done) {
+    const cbId = 'cb-' + m.id;
+    return el('li', null, [
+      el('input', { type: 'checkbox', id: cbId, checked: done, onchange: (e) => setDone(m.id, e.target.checked) }),
+      el('label', { for: cbId }, [
+        el('div', { class: 't', text: m.action }),
+        el('div', { class: 'm', text: `${m.date} · ${m.class || '수업 미지정'}` }),
+      ]),
+    ]);
+  }
+
+  function renderBadge() {
+    const n = pendingActions().length;
+    $('todoBadge').hidden = n === 0;
+    $('todoBadge').textContent = n;
+  }
+
+  function renderTodo() {
+    const pending = pendingActions().sort(byLatest);
+    const done = memos.filter((m) => m.action.trim() && m.actionDone).sort(byLatest);
+    $('todoList').replaceChildren(...pending.map((m) => checkItem(m, false)));
+    $('todoEmpty').hidden = pending.length > 0;
+    $('todoBanner').hidden = pending.length <= 5;
+    $('todoBanner').textContent = `미완료 다음 행동이 ${pending.length}개 쌓였어요. 오래된 것부터 정리하거나 완료 처리해 보세요.`;
+    $('doneList').replaceChildren(...done.map((m) => checkItem(m, true)));
+    $('doneSummary').textContent = `완료한 항목 (${done.length})`;
+  }
+
+  // ---------- 4. 주간 회고 ----------
+  const STOPWORDS = new Set(['그리고', '그래서', '하지만', '그런데', '그러나', '또한', '정말', '조금', '너무', '많이', '같다', '같은', '있다', '있는', '없다', '없는', '했다', '하는', '했고', '것이', '것을', '것은', '수업', '오늘']);
+
+  function renderRetro() {
+    const [ws, we] = weekRange();
+    const week = memos.filter((m) => m.date >= ws && m.date <= we);
+    $('statWeekCount').textContent = week.length;
+    $('statWeekRange').textContent = `${ws} ~ ${we}`;
+    const withAction = week.filter((m) => m.action.trim());
+    const doneN = withAction.filter((m) => m.actionDone).length;
+    if (withAction.length) {
+      $('statRate').textContent = Math.round((doneN / withAction.length) * 100) + '%';
+      $('statRateSub').textContent = `완료 ${doneN} / 전체 ${withAction.length}`;
+    } else {
+      $('statRate').textContent = '–';
+      $('statRateSub').textContent = '이번 주 다음 행동이 없어요';
+    }
+
+    const t = new Date();
+    const since = fmtDate(new Date(t.getFullYear(), t.getMonth(), t.getDate() - 29));
+    const recent = memos.filter((m) => m.date >= since && m.date <= todayStr());
+    const freq = new Map();
+    recent.forEach((m) => {
+      (m.observe + ' ' + m.interpret).toLowerCase().split(/[^\p{L}\p{N}]+/u).forEach((w) => {
+        if (w.length >= 2 && !STOPWORDS.has(w) && !/^\d+$/.test(w)) freq.set(w, (freq.get(w) || 0) + 1);
+      });
+    });
+    const top = [...freq.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 5);
+    const max = top.length ? top[0][1] : 1;
+    $('kwList').replaceChildren(...top.map(([w, c], i) => el('li', null, [
+      el('span', { class: 'rank', text: i + 1 }),
+      el('span', { class: 'word', text: w }),
+      el('span', { class: 'bar' }, [el('span', { style: `width:${Math.round((c / max) * 100)}%` })]),
+      el('span', { class: 'c', text: c + '회' }),
+    ])));
+    $('kwEmpty').hidden = top.length > 0;
+    $('kwEmpty').textContent = recent.length ? '집계할 단어가 아직 부족해요.' : '최근 30일 메모가 아직 없어요.';
+  }
+
+  // ---------- 5. 설정 / 데이터 ----------
+  function renderSettings() {
+    $('presetList').replaceChildren(...classes.map((c) => el('li', null, [
+      el('span', { text: c }),
+      el('button', { type: 'button', class: 'btn small warn', text: '삭제', 'aria-label': c + ' 삭제', onclick: async () => {
+        if (!(await confirmDialog(`"${c}" 수업을 목록에서 삭제할까요? (기존 메모는 그대로 남아요)`, '삭제'))) return;
+        classes = classes.filter((x) => x !== c);
+        persist(); renderAll(); toast('수업을 삭제했어요');
+      } }),
+    ])));
+    $('presetEmpty').hidden = classes.length > 0;
+  }
+
+  $('presetForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const v = $('presetInput').value.trim().slice(0, 40);
+    if (!v) return;
+    if (classes.includes(v)) { toast('이미 있는 수업이에요'); return; }
+    classes.push(v);
+    if (!persist()) return;
+    $('presetInput').value = '';
+    if (!editingId) fillClassSelect($('fClass'), $('fClass').value || v);
+    renderAll();
+    toast('수업을 추가했어요');
+  });
+
+  function download(filename, text, type) {
+    const blob = new Blob([text], { type });
+    const url = URL.createObjectURL(blob);
+    const a = el('a', { href: url, download: filename });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  $('exportJsonBtn').addEventListener('click', () => {
+    const data = { app: 'lesson-memo', version: 1, exportedAt: new Date().toISOString(), classes, memos };
+    download(`lesson-memo-${todayStr()}.json`, JSON.stringify(data, null, 2), 'application/json');
+    toast(`메모 ${memos.length}개를 내보냈어요`);
+  });
+
+  $('importJsonBtn').addEventListener('click', () => $('importFile').click());
+  $('importFile').addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast('파일이 너무 커요 (5MB 이하)'); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      let data;
+      try { data = JSON.parse(reader.result); } catch (err) { toast('JSON 파일을 읽을 수 없어요'); return; }
+      const inMemos = Array.isArray(data) ? data : (data && Array.isArray(data.memos) ? data.memos : null);
+      if (!inMemos) { toast('메모 데이터를 찾지 못했어요'); return; }
+      const ids = new Set(memos.map((m) => m.id));
+      let added = 0;
+      inMemos.map(normalizeMemo).filter(Boolean).forEach((m) => {
+        if (ids.has(m.id)) return;
+        ids.add(m.id); memos.push(m); added++;
+      });
+      const before = classes.length;
+      classes = normalizeClasses(classes.concat((data && data.classes) || []));
+      if (!persist()) return;
+      if (!editingId) fillClassSelect($('fClass'), $('fClass').value);
+      renderAll();
+      toast(`메모 ${added}개, 수업 ${classes.length - before}개를 합쳤어요`);
+    };
+    reader.onerror = () => toast('파일을 읽지 못했어요');
+    reader.readAsText(file, 'utf-8');
+  });
+
+  const oneLine = (s) => (s || '').trim().replace(/\s*\n+\s*/g, ' ') || '(없음)';
+  $('exportMdBtn').addEventListener('click', () => {
+    const period = $('mdPeriod').value;
+    const list = memos.filter((m) => inPeriod(m.date, period))
+      .sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt));
+    if (!list.length) { toast(`${PERIOD_LABEL[period]} 메모가 없어요`); return; }
+    const body = list.map((m) => [
+      `## ${m.date} ${m.class || '(수업 미지정)'}`,
+      `- 관찰: ${oneLine(m.observe)}`,
+      `- 해석: ${oneLine(m.interpret)}`,
+      `- 다음 행동: ${m.action.trim() ? `${oneLine(m.action)} (${m.actionDone ? '완료' : '미완료'})` : '(없음)'}`,
+    ].join('\n')).join('\n\n');
+    const md = `# 수업 3줄 메모 (${PERIOD_LABEL[period]}, ${todayStr()} 내보냄)\n\n${body}\n`;
+    download(`lesson-memo-${period}-${todayStr()}.md`, md, 'text/markdown;charset=utf-8');
+    toast(`메모 ${list.length}개를 Markdown으로 내보냈어요`);
+  });
+
+  // ---------- 렌더 ----------
+  function renderAll() {
+    renderBadge();
+    if (currentTab === 'list') renderList();
+    else if (currentTab === 'todo') renderTodo();
+    else if (currentTab === 'retro') renderRetro();
+    else if (currentTab === 'settings') renderSettings();
+  }
+
+  // 다른 탭(브라우저)에서 바뀐 경우 동기화
+  window.addEventListener('storage', (e) => {
+    if (e.key !== MEMO_KEY && e.key !== CLASS_KEY) return;
+    const sm = readJSON(MEMO_KEY, []);
+    memos = (Array.isArray(sm) ? sm : []).map(normalizeMemo).filter(Boolean);
+    classes = normalizeClasses((readJSON(CLASS_KEY, { classes: [] }) || {}).classes);
+    if (!editingId) fillClassSelect($('fClass'), $('fClass').value);
+    renderAll();
+  });
+
+  resetForm();
+  fillClassSelect($('fClass'), '');
+  renderAll();
+
+  // 웹에 올렸을 때만: 오프라인 캐시 + 저장 데이터가 자동 정리되지 않도록 요청 (file:// 에서는 건너뜀)
+  if (location.protocol !== 'file:') {
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
