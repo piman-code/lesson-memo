@@ -396,6 +396,16 @@
     toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
   }
 
+  // 사용 횟수(통계): 어떤 기능을 몇 번 썼는지만 파이맨의 DevApps로 보낸다(행동 이름 한 낱말).
+  // 메모 내용·학급 이름·기기 식별값은 보내지 않는다. 오프라인이거나 막혀 있으면 조용히 넘어가고 앱은 그대로 동작한다.
+  // 웹에 올린 주소(https)에서만 보낸다. 받는 쪽: DevApps functions/api/tally-app.js
+  function tally(action) {
+    try {
+      if (location.protocol !== 'https:' || navigator.webdriver || !navigator.sendBeacon) return;
+      navigator.sendBeacon('https://piman-devapps.pages.dev/api/tally-app', JSON.stringify({ events: [action] }));
+    } catch (e) {}
+  }
+
   // 확인 다이얼로그 → Promise<boolean>
   const dlg = $('confirmDlg');
   let dlgResolve = null;
@@ -480,6 +490,7 @@
     resetForm();
     fillClassSelect($('fClass'), lastClass);
     toast(wasEditing ? '수정됨' : '저장됨');
+    tally(wasEditing ? 'edit' : 'save');
     if (wasEditing) showTab('list'); else { renderBadge(); $('fObserve').focus(); }
   }
 
@@ -712,6 +723,7 @@
     const data = { app: 'lesson-memo', version: 1, exportedAt: new Date().toISOString(), classes, memos };
     download(`lesson-memo-${todayStr()}.json`, JSON.stringify(data, null, 2), 'application/json');
     toast(`메모 ${memos.length}개를 내보냈어요`);
+    tally('export-json');
   });
 
   $('importJsonBtn').addEventListener('click', () => $('importFile').click());
@@ -728,6 +740,7 @@
       if (!inMemos) { toast('메모 데이터를 찾지 못했어요'); return; }
       const ids = new Set(memos.map((m) => m.id));
       let added = 0;
+      tally('import-json');
       inMemos.map(normalizeMemo).filter(Boolean).forEach((m) => {
         if (ids.has(m.id)) return;
         ids.add(m.id); memos.push(m); added++;
@@ -745,6 +758,7 @@
 
   const oneLine = (s) => (s || '').trim().replace(/\s*\n+\s*/g, ' ') || '(없음)';
   $('exportMdBtn').addEventListener('click', () => {
+    tally('export-md');
     const period = $('mdPeriod').value;
     const list = memos.filter((m) => inPeriod(m.date, period))
       .sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt));
@@ -782,6 +796,7 @@
   resetForm();
   fillClassSelect($('fClass'), '');
   renderAll();
+  tally('open');
 
   // 웹에 올렸을 때만: 오프라인 캐시 + 저장 데이터가 자동 정리되지 않도록 요청 (file:// 에서는 건너뜀)
   if (location.protocol !== 'file:') {

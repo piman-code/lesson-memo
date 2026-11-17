@@ -1,5 +1,5 @@
 // 오프라인용 서비스 워커. 앱 파일을 바꾸면 VERSION을 올린다.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const APP_CACHE = 'lesson-memo-app-' + VERSION;
 const FONT_CACHE = 'lesson-memo-fonts';
 const APP_FILES = [
